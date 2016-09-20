@@ -79,6 +79,7 @@ func (e Entry) gelf() (out []byte, err error) {
 }
 
 // GelfSendTCP send entry to OVH paas Logs via TCP
+// TODO: (e Entry) Send(proto Protocol)
 func (e Entry) GelfSendTCP() error {
 
 	b, err := e.gelf()
