@@ -1,8 +1,12 @@
 package logrusOVH
 
 import (
+	"bytes"
+	"compress/gzip"
+	"compress/zlib"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"time"
 
@@ -27,18 +31,18 @@ type entryGelf struct {
 	Level        uint8   `json:"level"`
 }
 
-func (e Entry) send(proto Protocol) error {
+func (e Entry) send(proto Protocol, compresAlgo CompressAlgo) error {
 	switch proto {
 	case GELFTCP:
-		return e.sendGelfTCP()
+		return e.sendGelfTCP(compresAlgo)
 	default:
 		return fmt.Errorf("%v not implemented or not supported", proto)
 	}
 }
 
 // GELFTCP
-func (e Entry) sendGelfTCP() error {
-	data, err := e.gelf()
+func (e Entry) sendGelfTCP(compression CompressAlgo) error {
+	data, err := e.gelf(compression)
 	if err != nil {
 		return err
 	}
@@ -63,7 +67,7 @@ func (e Entry) sendGelfTCP() error {
 }
 
 // Serialize entry for Gelf Proto
-func (e Entry) gelf() (out []byte, err error) {
+func (e Entry) gelf(compression CompressAlgo) (out []byte, err error) {
 	g := entryGelf{
 		OvhToken:    e.ovhToken,
 		Version:     "1.1",
@@ -110,35 +114,23 @@ func (e Entry) gelf() (out []byte, err error) {
 	}
 	out = append(out, 44)
 	out = append(out, serialized[1:]...)
+	if compression != COMPRESSNONE {
+		var w io.Writer
+		b := bytes.NewBuffer(nil)
+		switch compression {
+		case COMPRESSGZIP:
+			w = gzip.NewWriter(b)
+		case COMPRESSZLIB:
+			w = zlib.NewWriter(b)
+		default:
+			return []byte{}, fmt.Errorf("%v compression not supported", compression)
+		}
+		w.Write(out)
+		out = b.Bytes()
+	}
+
 	return out, nil
 }
-
-// GelfSendTCP send entry to OVH paas Logs via TCP
-// TODO: (e Entry) Send(proto Protocol)
-/*func (e Entry) GelfSendTCP() error {
-
-	b, err := e.gelf()
-	if err != nil {
-		return err
-	}
-	b = append(b, 0)
-
-	var addr = "laas.runabove.com:2202"
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
-	if err != nil {
-		return err
-	}
-	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	_, err = conn.Write(b)
-
-	//log.Println(err, " - ", n)
-	return err
-}*/
 
 // return a conn
 func getConn(proto Protocol) (conn net.Conn, err error) {

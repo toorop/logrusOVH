@@ -21,13 +21,44 @@ const (
 )
 
 // TODO reverse map
+func (p Protocol) String() string {
+	switch p {
+	case GELFTCP:
+		return "GELFTCP"
+	case GELFUDP:
+		return "GELFUDP"
+	case GELFTLS:
+		return "GELFTLS"
+	case CAPNPROTOUDP:
+		return "CAPNPROTOUDP"
+	case CAPNPROTOTCP:
+		return "CAPNPROTOTCP"
+	case CAPNPROTOTLS:
+		return "CAPNPROTOTLS"
+	default:
+		return "UNKNOW"
+	}
+}
+
+// CompressAlgo the compression algorithm used
+type CompressAlgo uint8
+
+const (
+	// COMPRESSNONE No compression
+	COMPRESSNONE = 1 + iota
+	// COMPRESSGZIP GZIP compression
+	COMPRESSGZIP
+	// COMPRESSZLIB ZLIB compression
+	COMPRESSZLIB
+)
 
 // OvhHook represents an OVH PAAS Log
 type OvhHook struct {
-	async  bool
-	token  string
-	levels []logrus.Level
-	proto  Protocol
+	async       bool
+	token       string
+	levels      []logrus.Level
+	proto       Protocol
+	compression CompressAlgo
 }
 
 // NewOvhHook returns a sync Hook
@@ -43,12 +74,18 @@ func NewAsyncOvhHook(ovhToken string, proto Protocol) (*OvhHook, error) {
 // generic (ooops)
 func newOvhHook(ovhToken string, proto Protocol, async bool) (*OvhHook, error) {
 	hook := OvhHook{
-		async:  async,
-		token:  ovhToken,
-		proto:  proto,
-		levels: logrus.AllLevels,
+		async:       async,
+		token:       ovhToken,
+		proto:       proto,
+		levels:      logrus.AllLevels,
+		compression: COMPRESSNONE,
 	}
 	return &hook, nil
+}
+
+// SetCompression set compression algorithm
+func (hook *OvhHook) SetCompression(algo CompressAlgo) {
+	hook.compression = algo
 }
 
 // TODO SetLevels
@@ -59,7 +96,7 @@ func (hook *OvhHook) Fire(logrusEntry *logrus.Entry) error {
 		entry:    logrusEntry,
 		ovhToken: hook.token,
 	}
-	return e.send(hook.proto)
+	return e.send(hook.proto, hook.compression)
 }
 
 // Levels returns the available logging levels (interface impl)

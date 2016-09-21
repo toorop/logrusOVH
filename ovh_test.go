@@ -26,6 +26,7 @@ func TestSync(t *testing.T) {
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
+	hook.SetCompression(COMPRESSNONE)
 	msg := "test message ààà ééé"
 	log := logrus.New()
 	//log.Out = ioutil.Discard
