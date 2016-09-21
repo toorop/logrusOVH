@@ -20,6 +20,8 @@ const (
 	CAPNPROTOTLS
 )
 
+// TODO reverse map
+
 // OvhHook represents an OVH PAAS Log
 type OvhHook struct {
 	async  bool
@@ -49,15 +51,15 @@ func newOvhHook(ovhToken string, proto Protocol, async bool) (*OvhHook, error) {
 	return &hook, nil
 }
 
+// TODO SetLevels
+
 // Fire is called when a log event is fired.
 func (hook *OvhHook) Fire(logrusEntry *logrus.Entry) error {
-	// test GELF
 	e := Entry{
 		entry:    logrusEntry,
 		ovhToken: hook.token,
 	}
-	e.GelfSendTCP()
-	return nil
+	return e.send(hook.proto)
 }
 
 // Levels returns the available logging levels (interface impl)

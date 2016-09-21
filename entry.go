@@ -27,6 +27,41 @@ type entryGelf struct {
 	Level        uint8   `json:"level"`
 }
 
+func (e Entry) send(proto Protocol) error {
+	switch proto {
+	case GELFTCP:
+		return e.sendGelfTCP()
+	default:
+		return fmt.Errorf("%v not implemented or not supported", proto)
+	}
+}
+
+// GELFTCP
+func (e Entry) sendGelfTCP() error {
+	data, err := e.gelf()
+	if err != nil {
+		return err
+	}
+	// compression... or not
+
+	// get conn
+	conn, err := getConn(GELFTCP)
+	if err != nil {
+		return err
+	}
+	// TODO no defer
+	defer conn.Close()
+	data = append(data, 0)
+	n, err := conn.Write(data)
+	if err != nil {
+		return err
+	}
+	if n != len(data) {
+		return fmt.Errorf("entry not completeley sent %d/%d", n, len(data))
+	}
+	return nil
+}
+
 // Serialize entry for Gelf Proto
 func (e Entry) gelf() (out []byte, err error) {
 	g := entryGelf{
@@ -80,7 +115,7 @@ func (e Entry) gelf() (out []byte, err error) {
 
 // GelfSendTCP send entry to OVH paas Logs via TCP
 // TODO: (e Entry) Send(proto Protocol)
-func (e Entry) GelfSendTCP() error {
+/*func (e Entry) GelfSendTCP() error {
 
 	b, err := e.gelf()
 	if err != nil {
@@ -103,9 +138,16 @@ func (e Entry) GelfSendTCP() error {
 
 	//log.Println(err, " - ", n)
 	return err
-}
+}*/
 
-// Serialize entry for cap'n proto
-func (e Entry) capnproto() ([]byte, error) {
-	return []byte{}, nil
+// return a conn
+func getConn(proto Protocol) (conn net.Conn, err error) {
+	//var addr net.Addr
+	switch proto {
+	case GELFTCP:
+		conn, err = net.DialTimeout("tcp", "laas.runabove.com:2202", 5*time.Second)
+	default:
+		err = fmt.Errorf("%v not implemented or not supported", proto)
+	}
+	return
 }

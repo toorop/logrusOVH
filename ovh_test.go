@@ -2,7 +2,6 @@ package logrusOVH
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -27,9 +26,9 @@ func TestSync(t *testing.T) {
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
-	msg := "test message"
+	msg := "test message ààà ééé"
 	log := logrus.New()
-	log.Out = ioutil.Discard
+	//log.Out = ioutil.Discard
 	log.Hooks.Add(hook)
 	log.WithFields(logrus.Fields{"stringField": "string", "intField": 1, "booField": false, "foo": "bar"}).Error(msg)
 }
