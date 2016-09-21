@@ -52,6 +52,20 @@ const (
 	COMPRESSZLIB
 )
 
+const (
+	UDPCHUNKMAXSIZE           = 8192
+	UDP_CHUNK_MAX_SIZE_NOFRAG = 1472
+	UDP_CHUNK_MAX_SIZE_FRAG   = 8192
+	//UDP_CHUNK_MAX_SIZE        = 8164 // 8192 - (IP header) - (UDP header)
+	//UDP_CHUNK_MAX_DATA_SIZE   = 8144 // UDP_CHUNK_MAX_SIZE - ( 2 + 8 + 1 + 1)
+	UDP_CHUNK_MAX_SIZE      = 1420
+	UDP_CHUNK_MAX_DATA_SIZE = 1348 // UDP_CHUNK_MAX_SIZE - ( 2 + 8 + 1 + 1)
+)
+
+var (
+	GELF_CHUNK_MAGIC_BYTES = []byte{0x1e, 0x0f}
+)
+
 // OvhHook represents an OVH PAAS Log
 type OvhHook struct {
 	async       bool

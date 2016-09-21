@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"compress/zlib"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
+	"math"
+
 	"net"
 	"time"
 
@@ -31,10 +35,13 @@ type entryGelf struct {
 	Level        uint8   `json:"level"`
 }
 
-func (e Entry) send(proto Protocol, compresAlgo CompressAlgo) error {
+func (e Entry) send(proto Protocol, compression CompressAlgo) error {
 	switch proto {
 	case GELFTCP:
-		return e.sendGelfTCP(compresAlgo)
+		// TODO buffered conn
+		return e.sendGelfTCP(compression)
+	case GELFUDP:
+		return e.sendGelfUDP(compression)
 	default:
 		return fmt.Errorf("%v not implemented or not supported", proto)
 	}
@@ -46,14 +53,11 @@ func (e Entry) sendGelfTCP(compression CompressAlgo) error {
 	if err != nil {
 		return err
 	}
-	// compression... or not
-
 	// get conn
 	conn, err := getConn(GELFTCP)
 	if err != nil {
 		return err
 	}
-	// TODO no defer
 	defer conn.Close()
 	data = append(data, 0)
 	n, err := conn.Write(data)
@@ -61,7 +65,88 @@ func (e Entry) sendGelfTCP(compression CompressAlgo) error {
 		return err
 	}
 	if n != len(data) {
-		return fmt.Errorf("entry not completeley sent %d/%d", n, len(data))
+		return fmt.Errorf("entry not completely sent %d/%d", n, len(data))
+	}
+	return nil
+}
+
+// GELFUDP
+func (e Entry) sendGelfUDP(compression CompressAlgo) error {
+	data, err := e.gelf(compression)
+	if err != nil {
+		return err
+	}
+
+	// conn
+	conn, err := getConn(GELFUDP)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	//
+	/*chanPipe := make(chan []byte)
+	sendChuncked(data)*/
+	if len(data) < UDP_CHUNK_MAX_SIZE {
+		log.Println("NOT CHUNKED")
+		n, err := conn.Write(data)
+		if err != nil {
+			return err
+		}
+		if n != len(data) {
+			return fmt.Errorf("entry not completely sent %d/%d", n, len(data))
+		}
+	} else {
+		log.Println("CHUNKED", len(data))
+
+		// chunk buffer
+		chunkBuf := bytes.NewBuffer(nil)
+		// data buffer
+		dataBuf := bytes.NewBuffer(data)
+
+		// nb chunck
+		nbChunks := int(math.Ceil(float64(len(data)/UDP_CHUNK_MAX_DATA_SIZE))) + 1
+		log.Println("nbChunks", nbChunks)
+
+		// MSG ID
+		msgID := make([]byte, 8)
+		n, err := io.ReadFull(rand.Reader, msgID)
+		if err != nil || n != 8 {
+			return fmt.Errorf("unable to generate msgID, %v", err)
+		}
+		for i := 0; i < nbChunks; i++ {
+			chunkBuf.Write(GELF_CHUNK_MAGIC_BYTES)
+			chunkBuf.Write(msgID)
+			chunkBuf.WriteByte(byte(i))
+			chunkBuf.WriteByte(byte(nbChunks))
+			for j := 0; j < UDP_CHUNK_MAX_DATA_SIZE; j++ {
+				b, err := dataBuf.ReadByte()
+				if err != nil {
+					if err == io.EOF {
+						log.Println("EOF", dataBuf.Bytes())
+						break
+					}
+					return fmt.Errorf("unable to read from dataBuff, %v", err)
+				}
+				err = chunkBuf.WriteByte(b)
+				if err != nil {
+					return fmt.Errorf("unable to write to chunk buffer %v", err)
+				}
+			}
+			// write data
+			//log.Println("buf size", len(chunkBuf.Bytes()))
+			fmt.Println(chunkBuf.Bytes())
+			n, err := conn.Write(chunkBuf.Bytes())
+			if err != nil {
+				return err
+			}
+			if n != len(chunkBuf.Bytes()) {
+				return fmt.Errorf("entry not completely sent %d/%d", n, len(chunkBuf.Bytes()))
+			}
+
+			// reset chunk buffer
+			chunkBuf.Reset()
+		}
 	}
 	return nil
 }
@@ -138,6 +223,8 @@ func getConn(proto Protocol) (conn net.Conn, err error) {
 	switch proto {
 	case GELFTCP:
 		conn, err = net.DialTimeout("tcp", "laas.runabove.com:2202", 5*time.Second)
+	case GELFUDP:
+		conn, err = net.DialTimeout("udp", "laas.runabove.com:2202", 5*time.Second)
 	default:
 		err = fmt.Errorf("%v not implemented or not supported", proto)
 	}
