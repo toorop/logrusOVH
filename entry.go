@@ -12,7 +12,7 @@ import (
 
 	"os"
 
-	"github.com/toorop/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 // Entry represent the base entry

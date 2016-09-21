@@ -5,13 +5,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/toorop/logrus"
+	"github.com/Sirupsen/logrus"
 )
 
 func getToken() (string, error) {
 	token := os.Getenv("OVH_LOGS_TOKEN")
 	if token == "" {
-		return "", errors.New("OVH_LOGS_TOKEN must be set un ENV")
+		return "", errors.New("OVH_LOGS_TOKEN must be set in ENV")
 	}
 	return token, nil
 }

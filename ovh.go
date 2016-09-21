@@ -1,6 +1,6 @@
 package logrusOVH
 
-import "github.com/toorop/logrus"
+import "github.com/Sirupsen/logrus"
 
 // Protocol define available transfert proto
 type Protocol uint8
