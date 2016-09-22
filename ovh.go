@@ -1,6 +1,10 @@
 package logrusOVH
 
-import "github.com/Sirupsen/logrus"
+import (
+	"fmt"
+
+	"github.com/Sirupsen/logrus"
+)
 
 // Protocol define available transfert proto
 type Protocol uint8
@@ -58,6 +62,7 @@ const (
 	UDP_CHUNK_MAX_SIZE_FRAG   = 8192
 	//UDP_CHUNK_MAX_SIZE        = 8164 // 8192 - (IP header) - (UDP header)
 	//UDP_CHUNK_MAX_DATA_SIZE   = 8144 // UDP_CHUNK_MAX_SIZE - ( 2 + 8 + 1 + 1)
+	//UDP_CHUNK_MAX_SIZE      = 1420
 	UDP_CHUNK_MAX_SIZE      = 1420
 	UDP_CHUNK_MAX_DATA_SIZE = 1348 // UDP_CHUNK_MAX_SIZE - ( 2 + 8 + 1 + 1)
 )
@@ -98,8 +103,12 @@ func newOvhHook(ovhToken string, proto Protocol, async bool) (*OvhHook, error) {
 }
 
 // SetCompression set compression algorithm
-func (hook *OvhHook) SetCompression(algo CompressAlgo) {
+func (hook *OvhHook) SetCompression(algo CompressAlgo) error {
+	if algo != COMPRESSNONE && (hook.proto == GELFTCP || hook.proto == GELFTLS) {
+		return fmt.Errorf("compression is not available with %v", hook.proto)
+	}
 	hook.compression = algo
+	return nil
 }
 
 // TODO SetLevels

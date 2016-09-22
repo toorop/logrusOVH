@@ -42,6 +42,8 @@ func (e Entry) send(proto Protocol, compression CompressAlgo) error {
 		return e.sendGelfTCP(compression)
 	case GELFUDP:
 		return e.sendGelfUDP(compression)
+	case CAPNPROTOTCP:
+		return e.sendCapnprotoTCP()
 	default:
 		return fmt.Errorf("%v not implemented or not supported", proto)
 	}
@@ -85,10 +87,7 @@ func (e Entry) sendGelfUDP(compression CompressAlgo) error {
 	defer conn.Close()
 
 	//
-	/*chanPipe := make(chan []byte)
-	sendChuncked(data)*/
 	if len(data) < UDP_CHUNK_MAX_SIZE {
-		log.Println("NOT CHUNKED")
 		n, err := conn.Write(data)
 		if err != nil {
 			return err
@@ -97,8 +96,6 @@ func (e Entry) sendGelfUDP(compression CompressAlgo) error {
 			return fmt.Errorf("entry not completely sent %d/%d", n, len(data))
 		}
 	} else {
-		log.Println("CHUNKED", len(data))
-
 		// chunk buffer
 		chunkBuf := bytes.NewBuffer(nil)
 		// data buffer
@@ -106,7 +103,6 @@ func (e Entry) sendGelfUDP(compression CompressAlgo) error {
 
 		// nb chunck
 		nbChunks := int(math.Ceil(float64(len(data)/UDP_CHUNK_MAX_DATA_SIZE))) + 1
-		log.Println("nbChunks", nbChunks)
 
 		// MSG ID
 		msgID := make([]byte, 8)
@@ -114,6 +110,7 @@ func (e Entry) sendGelfUDP(compression CompressAlgo) error {
 		if err != nil || n != 8 {
 			return fmt.Errorf("unable to generate msgID, %v", err)
 		}
+
 		for i := 0; i < nbChunks; i++ {
 			chunkBuf.Write(GELF_CHUNK_MAGIC_BYTES)
 			chunkBuf.Write(msgID)
@@ -134,8 +131,6 @@ func (e Entry) sendGelfUDP(compression CompressAlgo) error {
 				}
 			}
 			// write data
-			//log.Println("buf size", len(chunkBuf.Bytes()))
-			fmt.Println(chunkBuf.Bytes())
 			n, err := conn.Write(chunkBuf.Bytes())
 			if err != nil {
 				return err
@@ -199,22 +194,36 @@ func (e Entry) gelf(compression CompressAlgo) (out []byte, err error) {
 	}
 	out = append(out, 44)
 	out = append(out, serialized[1:]...)
+
+	// Compress ?
 	if compression != COMPRESSNONE {
-		var w io.Writer
-		b := bytes.NewBuffer(nil)
+		var b bytes.Buffer
 		switch compression {
 		case COMPRESSGZIP:
-			w = gzip.NewWriter(b)
+			w := gzip.NewWriter(&b)
+			w.Write(out)
+			w.Close()
 		case COMPRESSZLIB:
-			w = zlib.NewWriter(b)
+			w := zlib.NewWriter(&b)
+			w.Write(out)
+			w.Close()
 		default:
 			return []byte{}, fmt.Errorf("%v compression not supported", compression)
 		}
-		w.Write(out)
 		out = b.Bytes()
 	}
 
 	return out, nil
+}
+
+func (e Entry) capnproto() (out []byte, err error) {
+	return
+}
+
+// CAPNPROTOTCP
+func (e Entry) sendCapnprotoTCP() error {
+
+	return nil
 }
 
 // return a conn
