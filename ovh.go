@@ -70,6 +70,7 @@ const (
 )
 
 var (
+	// GELF_CHUNK_MAGIC_BYTES "magic bytes" for GELF chunk headers
 	GELF_CHUNK_MAGIC_BYTES = []byte{0x1e, 0x0f}
 )
 
@@ -113,13 +114,15 @@ func (hook *OvhHook) SetCompression(algo CompressAlgo) error {
 	return nil
 }
 
-// TODO SetLevels
-
 // Fire is called when a log event is fired.
 func (hook *OvhHook) Fire(logrusEntry *logrus.Entry) error {
 	e := Entry{
 		entry:    logrusEntry,
 		ovhToken: hook.token,
+	}
+	if hook.async {
+		go e.send(hook.proto, hook.compression)
+		return nil
 	}
 	return e.send(hook.proto, hook.compression)
 }
