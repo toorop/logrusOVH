@@ -61,6 +61,12 @@ log.Out = ioutil.Discard
 log.Hooks.Add(hook)
 log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestGelfTCP"}).Error(msg)
 ```
+### async
+Just use:
+
+```go
+    hook, err := NewAsyncOvhHook("YOUR OVH TOKEN", CAPNPROTOTLS)
+```
 
 ## Available serialisations, transport
  * GELFTCP: Gelf serialisation & TCP transport
