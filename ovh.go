@@ -59,13 +59,19 @@ const (
 )
 
 const (
-	UDPCHUNKMAXSIZE           = 8192
-	UDP_CHUNK_MAX_SIZE_NOFRAG = 1472
-	UDP_CHUNK_MAX_SIZE_FRAG   = 8192
+	// UDPCHUNKMAXSIZE max chunk size (fragmented)
+	// UDPCHUNKMAXSIZE           = 8192
+	// UDP_CHUNK_MAX_SIZE_NOFRAG not fragmented
+	// UDP_CHUNK_MAX_SIZE_NOFRAG = 1472
+
+	// UDP_CHUNK_MAX_SIZE_FRAG max chunk size (fragmented)
+	UDP_CHUNK_MAX_SIZE_FRAG = 8192
 	//UDP_CHUNK_MAX_SIZE        = 8164 // 8192 - (IP header) - (UDP header)
 	//UDP_CHUNK_MAX_DATA_SIZE   = 8144 // UDP_CHUNK_MAX_SIZE - ( 2 + 8 + 1 + 1)
 	//UDP_CHUNK_MAX_SIZE      = 1420
-	UDP_CHUNK_MAX_SIZE      = 1420
+	// UDP_CHUNK_MAX_SIZE chunk max size
+	UDP_CHUNK_MAX_SIZE = 1420
+	// UDP_CHUNK_MAX_DATA_SIZE chunk data max size
 	UDP_CHUNK_MAX_DATA_SIZE = 1348 // UDP_CHUNK_MAX_SIZE - ( 2 + 8 + 1 + 1)
 )
 

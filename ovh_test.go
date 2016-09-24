@@ -1,13 +1,27 @@
+// MUST READ
+// do not use this with automatic testing
+// set your OVH token in ENV var before running test
+// export OVH_LOGS_TOKEN="YOU TOKEN"
+//
+// As we can check if logs are really sent to OVH, check your Graylog web console
+// we you launch thoses test. If you see 8 new entries it's OK.
+
 package logrusOVH
 
 import (
-	"errors"
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 )
+
+var msg = `Theatre eux conquis des peuples reciter petites oui. Corps non uns bonte eumes son. Halte oh soeur vaste laque votre va. Inoui il je voici carre xv je. Fut troupeaux ses cesserent peu agreerait cependant frontiere uniformes. Me sachant il conclue abattit faisait maudite la cousine. Du apparue attenua ce me lettres blanche lecture. Longeait feerique galopade pu au pourquoi repartit cavernes. Decharnees iii oui vieillards victorieux manoeuvres. Je avez tard sait idee au si cime se. 
+
+Courages nul preparer drapeaux des pourquoi apercoit. Acier porte fit jeu rirez. On groupes cadeaux retarde chasses hauteur ma pendant la qu. Pays eu qu ruer la cris dont idee la quel. Maintenant en vieillards paraissent assurances historique habilement la. Aux evidemment frissonner convulsion fut. Ah ou harmonie physique epanouir en. Reflete nations aisance chevaux du un grandie puisque. 
+frontiere uniformes. Me sachant il conclue abattit faisait maudite la cousine. Du apparue attenua ce me lettres blanche lecture. Longeait feerique galopade pu au pourquoi repartit cavernes. Decharnees iii oui vieillards victorieux manoeuvres. Je avez tard sait idee au si cime se. 
+`
 
 func expectERRisNil(err error, t *testing.T) {
 	if err != nil {
@@ -21,55 +35,116 @@ func expectERRisNotNil(err error, t *testing.T) {
 	}
 }
 
-func getToken() (string, error) {
+func getToken() string {
 	token := os.Getenv("OVH_LOGS_TOKEN")
 	if token == "" {
-		return "", errors.New("OVH_LOGS_TOKEN must be set in ENV")
-	}
-	return token, nil
-}
-
-func TestSync(t *testing.T) {
-	token, err := getToken()
-	if err != nil {
-		println(err.Error())
+		println("OVH_LOGS_TOKEN must be set in ENV for tests")
 		os.Exit(0)
 	}
-	hook, err := NewOvhHook(token, GELFUDP)
+	return token
+}
+
+func TestGelfTCP(t *testing.T) {
+	hook, err := NewOvhHook(getToken(), GELFTCP)
+	if err != nil {
+		t.Error("expected err == nil, got", err)
+	}
+	hook.SetCompression(COMPRESSNONE)
+	log := logrus.New()
+	log.Out = ioutil.Discard
+	log.Hooks.Add(hook)
+	log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestGelfTCP"}).Error(msg)
+}
+
+func TestGelfTLS(t *testing.T) {
+	hook, err := NewOvhHook(getToken(), GELFTLS)
+	if err != nil {
+		t.Error("expected err == nil, got", err)
+	}
+	hook.SetCompression(COMPRESSNONE)
+	log := logrus.New()
+	log.Out = ioutil.Discard
+	log.Hooks.Add(hook)
+	log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestGelfTLS"}).Error(msg)
+}
+
+func TestGelfUDP(t *testing.T) {
+	hook, err := NewOvhHook(getToken(), GELFUDP)
+	if err != nil {
+		t.Error("expected err == nil, got", err)
+	}
+	hook.SetCompression(COMPRESSNONE)
+	log := logrus.New()
+	log.Out = ioutil.Discard
+	log.Hooks.Add(hook)
+	log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestGelfUDP"}).Error(msg)
+}
+
+func TestCompressNotAllowed(t *testing.T) {
+	hook, err := NewOvhHook(getToken(), GELFTCP)
+	expectERRisNil(err, t)
+	expectERRisNotNil(hook.SetCompression(COMPRESSZLIB), t)
+	expectERRisNil(hook.SetCompression(COMPRESSNONE), t)
+}
+
+func TestGelfTCPGzip(t *testing.T) {
+	hook, err := NewOvhHook(getToken(), GELFTCP)
+	if err != nil {
+		t.Error("expected err == nil, got", err)
+	}
+	hook.SetCompression(COMPRESSGZIP)
+	log := logrus.New()
+	log.Out = ioutil.Discard
+	log.Hooks.Add(hook)
+	log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestGelfTCPGzip"}).Error(msg)
+}
+
+func TestGelfTCPzlib(t *testing.T) {
+	hook, err := NewOvhHook(getToken(), GELFTCP)
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
 	hook.SetCompression(COMPRESSZLIB)
-	msg := `Theatre eux conquis des peuples reciter petites oui. Corps non uns bonte eumes son. Halte oh soeur vaste laque votre va. Inoui il je voici carre xv je. Fut troupeaux ses cesserent peu agreerait cependant frontiere uniformes. Me sachant il conclue abattit faisait maudite la cousine. Du apparue attenua ce me lettres blanche lecture. Longeait feerique galopade pu au pourquoi repartit cavernes. Decharnees iii oui vieillards victorieux manoeuvres. Je avez tard sait idee au si cime se. 
-
-Courages nul preparer drapeaux des pourquoi apercoit. Acier porte fit jeu rirez. On groupes cadeaux retarde chasses hauteur ma pendant la qu. Pays eu qu ruer la cris dont idee la quel. Maintenant en vieillards paraissent assurances historique habilement la. Aux evidemment frissonner convulsion fut. Ah ou harmonie physique epanouir en. Reflete nations aisance chevaux du un grandie puisque. 
-
-Tambours tu du ignorant de as philippe lointain. Vie que folles pointe levres eux femmes vif. Ai pourtant troupeau ah familles de. Ont craignait ses echauffer echangent fit petillent. Or patiemment historique le xv compassion renferment. Par verte fin gagne roche crier soirs force. Debouche ils allaient par peu dit arrivera interdit triomphe actrices. Jour eux pere murs bon fins ils par. Theatre eux conquis des peuples reciter petites oui. Corps non uns bonte eumes son. Halte oh soeur vaste laque votre va. Inoui il je voici carre xv je. Fut troupeaux ses cesserent peu agreerait cependant frontiere uniformes. Me sachant il conclue abattit faisait maudite la cousine. Du apparue attenua ce me lettres blanche lecture. Longeait feerique galopade pu au pourquoi repartit cavernes. Decharnees iii oui vieillards victorieux manoeuvres. Je avez tard sait idee au si cime se. 
-
-Courages nul preparer drapeaux des pourquoi apercoit. Acier porte fit jeu rirez. On groupes cadeaux retarde chasses hauteur ma pendant la qu. Pays eu qu ruer la cris dont idee la quel. Maintenant en vieillards paraissent assurances historique habilement la. Aux evidemment frissonner convulsion fut. Ah ou harmonie physique epanouir en. Reflete nations aisance chevaux du un grandie puisque. 
-
-Tambours tu du ignorant de as philippe lointain. Vie que folles pointe levres eux femmes vif. Ai pourtant troupeau ah familles de. Ont craignait ses echauffer echangent fit petillent. Or patiemment historique le xv compassion renferment. Par verte fin gagne roche crier soirs force. Debouche ils allaient par peu dit arrivera interdit triomphe actrices. Jour eux pere murs bon fins ils par.Theatre eux conquis des peuples reciter petites oui. Corps non uns bonte eumes son. Halte oh soeur vaste laque votre va. Inoui il je voici carre xv je. Fut troupeaux ses cesserent peu agreerait cependant frontiere uniformes. Me sachant il conclue abattit faisait maudite la cousine. Du apparue attenua ce me lettres blanche lecture. Longeait feerique galopade pu au pourquoi repartit cavernes. Decharnees iii oui vieillards victorieux manoeuvres. Je avez tard sait idee au si cime se. 
-
-Courages nul preparer drapeaux des pourquoi apercoit. Acier porte fit jeu rirez. On groupes cadeaux retarde chasses hauteur ma pendant la qu. Pays eu qu ruer la cris dont idee la quel. Maintenant en vieillards paraissent assurances historique habilement la. Aux evidemment frissonner convulsion fut. Ah ou harmonie physique epanouir en. Reflete nations aisance chevaux du un grandie puisque. 
-
-Tambours tu du ignorant de as philippe lointain. Vie que folles pointe levres eux femmes vif. Ai pourtant troupeau ah familles de. Ont craignait ses echauffer echangent fit petillent. Or patiemment historique le xv compassion renferment. Par verte fin gagne roche crier soirs force. Debouche ils allaient par peu dit arrivera interdit triomphe actrices. Jour eux pere murs bon fins ils par.
-Tambours tu du ignorant de as philippe lointain. Vie que folles pointe levres eux femmes vif. Ai pourtant troupeau ah familles de. Ont craignait ses echauffer echangent fit petillent. Or patiemment historique le xv compassion renferment. Par verte fin gagne roche crier soirs force. Debouche ils allaient par peu dit arrivera interdit triomphe actrices. Jour eux pere murs bon fins ils par. Theatre eux conquis des peuples reciter petites oui. Corps non uns bonte eumes son. Halte oh soeur vaste laque votre va. Inoui il je voici carre xv je. Fut troupeaux ses cesserent peu agreerait cependant frontiere uniformes. Me sachant il conclue abattit faisait maudite la cousine. Du apparue attenua ce me lettres blanche lecture. Longeait feerique galopade pu au pourquoi repartit cavernes. Decharnees iii oui vieillards victorieux manoeuvres. Je avez tard sait idee au si cime se. 
-`
 	log := logrus.New()
 	log.Out = ioutil.Discard
 	log.Hooks.Add(hook)
-	log.WithFields(logrus.Fields{"stringField": "string", "intField": 1, "foo": "bar"}).Error(msg)
+	log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestGelfTCPzlib"}).Error(msg)
 }
 
-func TestCompressNotAllowed(t *testing.T) {
-	token, err := getToken()
+func TestCapnprotoTCP(t *testing.T) {
+	hook, err := NewOvhHook(getToken(), GELFTCP)
 	if err != nil {
-		println(err.Error())
-		os.Exit(0)
+		t.Error("expected err == nil, got", err)
 	}
-	hook, err := NewOvhHook(token, GELFTCP)
-	expectERRisNil(err, t)
-	expectERRisNotNil(hook.SetCompression(COMPRESSZLIB), t)
-	expectERRisNil(hook.SetCompression(COMPRESSNONE), t)
+	hook.SetCompression(COMPRESSNONE)
+	log := logrus.New()
+	log.Out = ioutil.Discard
+	log.Hooks.Add(hook)
+	log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestCapnprotoTCP"}).Error(msg)
+}
 
+func TestCapnprotoTLS(t *testing.T) {
+	hook, err := NewOvhHook(getToken(), GELFTCP)
+	if err != nil {
+		t.Error("expected err == nil, got", err)
+	}
+	hook.SetCompression(COMPRESSNONE)
+	log := logrus.New()
+	log.Out = ioutil.Discard
+	log.Hooks.Add(hook)
+	log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestCapnprotoTLS"}).Error(msg)
+}
+
+func TestAsync(t *testing.T) {
+	hook, err := NewOvhHook(getToken(), GELFTCP)
+	if err != nil {
+		t.Error("expected err == nil, got", err)
+	}
+	hook.SetCompression(COMPRESSNONE)
+	log := logrus.New()
+	log.Out = ioutil.Discard
+	log.Hooks.Add(hook)
+	log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestAsync"}).Error(msg)
+	// wait for async - yes i know, it's crappy ;)
+	time.Sleep(2 + time.Second)
 }
