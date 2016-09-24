@@ -65,7 +65,7 @@ log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestGelfTC
 Just use:
 
 ```go
-    hook, err := NewAsyncOvhHook("YOUR OVH TOKEN", CAPNPROTOTLS)
+hook, err := NewAsyncOvhHook("YOUR OVH TOKEN", CAPNPROTOTLS)
 ```
 
 ## Available serialisations, transport
