@@ -50,10 +50,12 @@ type CompressAlgo uint8
 const (
 	// COMPRESSNONE No compression
 	COMPRESSNONE = 1 + iota
-	// COMPRESSGZIP GZIP compression
+	// COMPRESSGZIP GZIP compression for GELF
 	COMPRESSGZIP
-	// COMPRESSZLIB ZLIB compression
+	// COMPRESSZLIB ZLIB compression for GELF
 	COMPRESSZLIB
+	// COMPRESSPACKNPPACKED compression for cap'n proto
+	COMPRESSPACKNPPACKED
 )
 
 const (
