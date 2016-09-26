@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"math"
 
 	"zombiezen.com/go/capnproto2"
@@ -102,7 +101,7 @@ func (e Entry) send(proto Protocol, compression CompressAlgo) (err error) {
 					b, err := dataBuf.ReadByte()
 					if err != nil {
 						if err == io.EOF {
-							log.Println("EOF", dataBuf.Bytes())
+							//log.Println("EOF", dataBuf.Bytes())
 							break
 						}
 						return fmt.Errorf("unable to read from dataBuff, %v", err)
@@ -156,27 +155,28 @@ func (e Entry) gelf(compression CompressAlgo) (out []byte, err error) {
 		return []byte{}, fmt.Errorf("Failed to marshal gelfEntry to JSON, %v", err)
 	}
 
-	// remove trailing }
-	out = out[0 : len(out)-1]
-
 	// From logrus
-	data := make(logrus.Fields, len(e.entry.Data)+3)
-	for k, v := range e.entry.Data {
-		switch v := v.(type) {
-		case error:
-			// Otherwise errors are ignored by `encoding/json`
-			// https://github.com/Sirupsen/logrus/issues/137
-			data["_"+k] = v.Error()
-		default:
-			data["_"+k] = v
+	if len(e.entry.Data) > 0 {
+		// remove trailing }
+		out = out[0 : len(out)-1]
+		data := make(logrus.Fields, len(e.entry.Data)+3)
+		for k, v := range e.entry.Data {
+			switch v := v.(type) {
+			case error:
+				// Otherwise errors are ignored by `encoding/json`
+				// https://github.com/Sirupsen/logrus/issues/137
+				data["_"+k] = v.Error()
+			default:
+				data["_"+k] = v
+			}
 		}
+		serialized, err := json.Marshal(data)
+		if err != nil {
+			return []byte{}, fmt.Errorf("Failed to marshal e.entry.Data to JSON, %v", err)
+		}
+		out = append(out, 44)
+		out = append(out, serialized[1:]...)
 	}
-	serialized, err := json.Marshal(data)
-	if err != nil {
-		return []byte{}, fmt.Errorf("Failed to marshal e.entry.Data to JSON, %v", err)
-	}
-	out = append(out, 44)
-	out = append(out, serialized[1:]...)
 
 	// Compress ?
 	if compression != COMPRESSNONE {

@@ -58,6 +58,22 @@ const (
 	COMPRESSPACKNPPACKED
 )
 
+func (c CompressAlgo) String() string {
+	switch c {
+	case COMPRESSNONE:
+		return "no compression"
+	case COMPRESSGZIP:
+		return "GZIP"
+	case COMPRESSZLIB:
+		return "COMPRESSZLIB"
+	case COMPRESSPACKNPPACKED:
+		return "COMPRESSPACKNPPACKED"
+	default:
+		return "unknow"
+	}
+
+}
+
 const (
 	// UDPCHUNKMAXSIZE max chunk size (fragmented)
 	// UDPCHUNKMAXSIZE           = 8192

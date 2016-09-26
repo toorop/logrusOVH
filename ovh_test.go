@@ -4,7 +4,7 @@
 // export OVH_LOGS_TOKEN="YOU TOKEN"
 //
 // As we can check if logs are really sent to OVH, check your Graylog web console
-// we you launch thoses test. If you see 8 new entries it's OK.
+// we you launch thoses test. If you see 9 new entries it's OK.
 
 package logrusOVH
 
@@ -42,6 +42,18 @@ func getToken() string {
 		os.Exit(0)
 	}
 	return token
+}
+
+func TestGelfTCPBasic(t *testing.T) {
+	hook, err := NewOvhHook(getToken(), GELFTCP)
+	if err != nil {
+		t.Error("expected err == nil, got", err)
+	}
+	hook.SetCompression(COMPRESSNONE)
+	log := logrus.New()
+	log.Out = ioutil.Discard
+	log.Hooks.Add(hook)
+	log.Error(msg)
 }
 
 func TestGelfTCP(t *testing.T) {
