@@ -1,6 +1,6 @@
 # OVH "paas logs" hook for logrus [![GoDoc](http://godoc.org/github.com/toorop/logrusOVH?status.svg)](http://godoc.org/github.com/toorop/logrusOVH) [![Go Report Card](https://goreportcard.com/badge/github.com/toorop/logrusOVH)](https://goreportcard.com/report/github.com/toorop/logrusOVH)
 
-Use this hook to send your [Logrus](https://github.com/Sirupsen/logrus) logs to [OVH "paas logs"](https://www.runabove.com/paas-logs.xml)
+Use this hook to send your [Logrus](https://github.com/Sirupsen/logrus) logs to [OVH "Logs Data Platform"](https://www.ovh.com/fr/data-platforms/logs/)
 
 ## Installation
 
@@ -16,7 +16,7 @@ import (
   "github.com/Sirupsen/logrus"
   "github.com/toorop/logrusOVH"
 )
-hook, err := NewOvhHook("YOUR OVH TOKEN", GELFTCP)
+hook, err := NewOvhHook("ENDPOINT","YOUR OVH TOKEN", GELFTCP)
 if err != nil {
     panic( err)
 }
@@ -33,7 +33,7 @@ import (
     "github.com/Sirupsen/logrus"
     "github.com/toorop/logrusOVH"
 )
-hook, err := NewOvhHook("YOUR OVH TOKEN", GELFUDP)
+hook, err := NewOvhHook("ENDPOINT","YOUR OVH TOKEN", GELFUDP)
 if err != nil {
     panic( err)
 }
@@ -51,7 +51,7 @@ import (
   "github.com/Sirupsen/logrus"
   "github.com/toorop/logrusOVH"
 )
-hook, err := NewOvhHook("YOUR OVH TOKEN", CAPNPROTOTLS)
+hook, err := NewOvhHook("ENDPOINT","YOUR OVH TOKEN", CAPNPROTOTLS)
 if err != nil {
     panic( err)
 }
@@ -65,7 +65,7 @@ log.WithFields(logrus.Fields{"msgid": "mymsgID", "intField": 1, "T": "TestGelfTC
 Just use:
 
 ```go
-hook, err := NewAsyncOvhHook("YOUR OVH TOKEN", CAPNPROTOTLS)
+hook, err := NewAsyncOvhHook("ENDPOINT","YOUR OVH TOKEN", CAPNPROTOTLS)
 ```
 
 ## Available serialisations, transport
