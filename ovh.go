@@ -9,6 +9,9 @@ import (
 // Protocol define available transfert proto
 type Protocol uint8
 
+// Endpoint OVH logs endpoint
+var Endpoint string
+
 const (
 	// GELFUDP for Gelf + UDP
 	GELFUDP Protocol = 1 + iota
@@ -99,6 +102,7 @@ var (
 // OvhHook represents an OVH PAAS Log
 type OvhHook struct {
 	async       bool
+	endpoint    string
 	token       string
 	levels      []logrus.Level
 	proto       Protocol
@@ -106,17 +110,18 @@ type OvhHook struct {
 }
 
 // NewOvhHook returns a sync Hook
-func NewOvhHook(ovhToken string, proto Protocol) (*OvhHook, error) {
-	return newOvhHook(ovhToken, proto, false)
+func NewOvhHook(endpoint, ovhToken string, proto Protocol) (*OvhHook, error) {
+	return newOvhHook(endpoint, ovhToken, proto, false)
 }
 
 // NewAsyncOvhHook returns a async hook
-func NewAsyncOvhHook(ovhToken string, proto Protocol) (*OvhHook, error) {
-	return newOvhHook(ovhToken, proto, true)
+func NewAsyncOvhHook(endpoint, ovhToken string, proto Protocol) (*OvhHook, error) {
+	return newOvhHook(endpoint, ovhToken, proto, true)
 }
 
 // generic (ooops)
-func newOvhHook(ovhToken string, proto Protocol, async bool) (*OvhHook, error) {
+func newOvhHook(endpoint, ovhToken string, proto Protocol, async bool) (*OvhHook, error) {
+	Endpoint = endpoint
 	hook := OvhHook{
 		async:       async,
 		token:       ovhToken,

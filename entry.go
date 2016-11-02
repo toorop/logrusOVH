@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -40,7 +41,6 @@ type entryGelf struct {
 
 func (e Entry) send(proto Protocol, compression CompressAlgo) (err error) {
 	var data []byte
-
 	switch proto {
 	case GELFTCP, GELFUDP, GELFTLS:
 		if data, err = e.gelf(compression); err != nil {
@@ -398,24 +398,27 @@ L:
 
 // return a conn
 func getConn(proto Protocol) (conn net.Conn, err error) {
+	if Endpoint == "" {
+		return nil, errors.New("Endpoint is not defined")
+	}
 	//var addr net.Addr
 	switch proto {
 	case GELFTCP:
-		conn, err = net.DialTimeout("tcp", "laas.runabove.com:2202", 5*time.Second)
+		conn, err = net.DialTimeout("tcp", Endpoint+":2202", 5*time.Second)
 	case GELFTLS:
 		conf := &tls.Config{}
-		conn, err = tls.Dial("tcp", "laas.runabove.com:12202", conf)
+		conn, err = tls.Dial("tcp", Endpoint+":12202", conf)
 		if err != nil {
 			return nil, err
 		}
 		err = conn.SetDeadline(time.Now().Add(10 * time.Second))
 	case GELFUDP:
-		conn, err = net.DialTimeout("udp", "laas.runabove.com:2202", 5*time.Second)
+		conn, err = net.DialTimeout("udp", Endpoint+":2202", 5*time.Second)
 	case CAPNPROTOTCP:
-		conn, err = net.DialTimeout("tcp", "laas.runabove.com:2204", 5*time.Second)
+		conn, err = net.DialTimeout("tcp", Endpoint+":2204", 5*time.Second)
 	case CAPNPROTOTLS:
 		conf := &tls.Config{}
-		conn, err = tls.Dial("tcp", "laas.runabove.com:12204", conf)
+		conn, err = tls.Dial("tcp", Endpoint+":12204", conf)
 		if err != nil {
 			return nil, err
 		}
