@@ -17,6 +17,8 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
+const endpoint = "gra1.logs.ovh.com"
+
 var msg = `Theatre eux conquis des peuples reciter petites oui. Corps non uns bonte eumes son. Halte oh soeur vaste laque votre va. Inoui il je voici carre xv je. Fut troupeaux ses cesserent peu agreerait cependant frontiere uniformes. Me sachant il conclue abattit faisait maudite la cousine. Du apparue attenua ce me lettres blanche lecture. Longeait feerique galopade pu au pourquoi repartit cavernes. Decharnees iii oui vieillards victorieux manoeuvres. Je avez tard sait idee au si cime se. 
 
 Courages nul preparer drapeaux des pourquoi apercoit. Acier porte fit jeu rirez. On groupes cadeaux retarde chasses hauteur ma pendant la qu. Pays eu qu ruer la cris dont idee la quel. Maintenant en vieillards paraissent assurances historique habilement la. Aux evidemment frissonner convulsion fut. Ah ou harmonie physique epanouir en. Reflete nations aisance chevaux du un grandie puisque. 
@@ -45,7 +47,7 @@ func getToken() string {
 }
 
 func TestGelfTCPBasic(t *testing.T) {
-	hook, err := NewOvhHook(getToken(), GELFTCP)
+	hook, err := NewOvhHook(endpoint, getToken(), GELFTCP)
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
@@ -57,7 +59,7 @@ func TestGelfTCPBasic(t *testing.T) {
 }
 
 func TestGelfTCP(t *testing.T) {
-	hook, err := NewOvhHook(getToken(), GELFTCP)
+	hook, err := NewOvhHook(endpoint, getToken(), GELFTCP)
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
@@ -69,7 +71,7 @@ func TestGelfTCP(t *testing.T) {
 }
 
 func TestGelfTLS(t *testing.T) {
-	hook, err := NewOvhHook(getToken(), GELFTLS)
+	hook, err := NewOvhHook(endpoint, getToken(), GELFTLS)
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
@@ -81,7 +83,7 @@ func TestGelfTLS(t *testing.T) {
 }
 
 func TestGelfUDP(t *testing.T) {
-	hook, err := NewOvhHook(getToken(), GELFUDP)
+	hook, err := NewOvhHook(endpoint, getToken(), GELFUDP)
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
@@ -93,14 +95,14 @@ func TestGelfUDP(t *testing.T) {
 }
 
 func TestCompressNotAllowed(t *testing.T) {
-	hook, err := NewOvhHook(getToken(), GELFTCP)
+	hook, err := NewOvhHook(endpoint, getToken(), GELFTCP)
 	expectERRisNil(err, t)
 	expectERRisNotNil(hook.SetCompression(COMPRESSZLIB), t)
 	expectERRisNil(hook.SetCompression(COMPRESSNONE), t)
 }
 
 func TestGelfTCPGzip(t *testing.T) {
-	hook, err := NewOvhHook(getToken(), GELFTCP)
+	hook, err := NewOvhHook(endpoint, getToken(), GELFTCP)
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
@@ -112,7 +114,7 @@ func TestGelfTCPGzip(t *testing.T) {
 }
 
 func TestGelfTCPzlib(t *testing.T) {
-	hook, err := NewOvhHook(getToken(), GELFTCP)
+	hook, err := NewOvhHook(endpoint, getToken(), GELFTCP)
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
@@ -124,7 +126,7 @@ func TestGelfTCPzlib(t *testing.T) {
 }
 
 func TestCapnprotoTCP(t *testing.T) {
-	hook, err := NewOvhHook(getToken(), GELFTCP)
+	hook, err := NewOvhHook(endpoint, getToken(), GELFTCP)
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
@@ -136,7 +138,7 @@ func TestCapnprotoTCP(t *testing.T) {
 }
 
 func TestCapnprotoTLS(t *testing.T) {
-	hook, err := NewOvhHook(getToken(), GELFTCP)
+	hook, err := NewOvhHook(endpoint, getToken(), GELFTCP)
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
@@ -148,7 +150,7 @@ func TestCapnprotoTLS(t *testing.T) {
 }
 
 func TestAsync(t *testing.T) {
-	hook, err := NewOvhHook(getToken(), GELFTCP)
+	hook, err := NewOvhHook(endpoint, getToken(), GELFTCP)
 	if err != nil {
 		t.Error("expected err == nil, got", err)
 	}
