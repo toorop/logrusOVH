@@ -59,6 +59,8 @@ const (
 	COMPRESSZLIB
 	// COMPRESSPACKNPPACKED compression for cap'n proto
 	COMPRESSPACKNPPACKED
+	// COMPRESSDEFLATE DEFLATE compression for GELF
+	COMPRESSDEFLATE
 )
 
 func (c CompressAlgo) String() string {
@@ -71,6 +73,8 @@ func (c CompressAlgo) String() string {
 		return "COMPRESSZLIB"
 	case COMPRESSPACKNPPACKED:
 		return "COMPRESSPACKNPPACKED"
+	case COMPRESSDEFLATE:
+		return "COMPRESSDEFLATE"
 	default:
 		return "unknow"
 	}
@@ -151,6 +155,9 @@ func (hook *OvhHook) Fire(logrusEntry *logrus.Entry) error {
 		go e.send(hook.proto, hook.compression)
 		return nil
 	}
+	/*err := e.send(hook.proto, hook.compression)
+	log.Println("ERR", err)
+	return err*/
 	return e.send(hook.proto, hook.compression)
 }
 

@@ -2,6 +2,7 @@ package logrusOVH
 
 import (
 	"bytes"
+	"compress/flate"
 	"compress/gzip"
 	"compress/zlib"
 	"crypto/rand"
@@ -188,6 +189,13 @@ func (e Entry) gelf(compression CompressAlgo) (out []byte, err error) {
 			w.Close()
 		case COMPRESSZLIB:
 			w := zlib.NewWriter(&b)
+			w.Write(out)
+			w.Close()
+		case COMPRESSDEFLATE:
+			w, err := flate.NewWriter(&b, 1)
+			if err != nil {
+				return out, err
+			}
 			w.Write(out)
 			w.Close()
 		default:
