@@ -27,7 +27,7 @@ const (
 	CAPNPROTOTLS
 )
 
-// TODO reverse map
+// reverse map
 func (p Protocol) String() string {
 	switch p {
 	case GELFTCP:
@@ -147,17 +147,48 @@ func (hook *OvhHook) SetCompression(algo CompressAlgo) error {
 
 // Fire is called when a log event is fired.
 func (hook *OvhHook) Fire(logrusEntry *logrus.Entry) error {
+	/* Convert Logrus log level to Syslog levels
+	we need to clone entry
+
+	Logrus		|	Syslog
+	0 - panic	|	0 - emergency
+	1 - fatal	|   2 - critical
+	2 - error	|   3 - error
+	3 - warn 	|   4 - warn
+	4 - info	|	6 - info
+	5 - debug	|   7 - debug
+	*/
+
+	lentry := logrus.Entry{
+		Logger:  logrusEntry.Logger,
+		Data:    logrusEntry.Data,
+		Time:    logrusEntry.Time,
+		Level:   logrusEntry.Level,
+		Message: logrusEntry.Message,
+		Buffer:  logrusEntry.Buffer,
+	}
+
+	switch lentry.Level {
+	case logrus.FatalLevel:
+		lentry.Level = 2
+	case logrus.ErrorLevel:
+		lentry.Level = 3
+	case logrus.WarnLevel:
+		lentry.Level = 4
+	case logrus.InfoLevel:
+		lentry.Level = 6
+	case logrus.DebugLevel:
+		lentry.Level = 7
+	}
+
 	e := Entry{
-		entry:    logrusEntry,
+		entry:    &lentry,
 		ovhToken: hook.token,
 	}
 	if hook.async {
 		go e.send(hook.proto, hook.compression)
 		return nil
 	}
-	/*err := e.send(hook.proto, hook.compression)
-	log.Println("ERR", err)
-	return err*/
 	return e.send(hook.proto, hook.compression)
 }
 
