@@ -300,7 +300,12 @@ func (e Entry) capnproto(packed bool) (out []byte, err error) {
 	if found, value = e.getCapnpFieldValue("msgid", "string", ignoreDataKey); found {
 		msgID = value.(string)
 	} else {
-		msgID = uuid.NewV4().String()
+		msgUUID, err := uuid.NewV4()
+		if err != nil {
+			return nil, err
+		}
+		msgID = msgUUID.String()
+
 	}
 	if err = record.SetMsgid(msgID); err != nil {
 		return
