@@ -20,8 +20,8 @@ import (
 
 	"os"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 )
 
 // Entry represent the base entry

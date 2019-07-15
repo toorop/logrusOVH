@@ -3,7 +3,7 @@ package logrusOVH
 import (
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // Protocol define available transfert proto
